@@ -19,10 +19,6 @@ import { Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
 export default function Tasks() {
-    const [categories, setCategories] = useState([])
-    const [allSubCategories, setAllSubCategories] = useState([])
-    const [filteredSubCategories, setFilteredSubCategories] = useState([])
-
     const [snackbarOpen, setSnackbarOpen] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState("")
     const [snackbarSeverity, setSnackbarSeverity] = useState('success')
@@ -38,18 +34,15 @@ export default function Tasks() {
     const [deleteId, setDeleteId] = useState(null)
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [newTask, setNewTask] = useState({
+        id: '',
         title: '',
-        summary: '',
-        content: '',
-        categoryid: '',
-        subcategoryid: '',
+        description: '',
         created_at: new Date().toISOString()  // Set current datetime
     })
 
     const [editTask, setEditTask] = useState({
         title: '',
-        summary: '',
-        content: '',
+        description: '',
         created_at: new Date().toISOString()  // Set current datetime
     })
 
@@ -131,16 +124,21 @@ export default function Tasks() {
     const handleAddTask = async () => {
         setSnackbarOpen(true)
         try {
-            const response = await axiosInstance.post('http://localhost:8080/tasks', {
+            const response = await axiosInstance.post('http://localhost:8080/task/add', {
                 ...newTask,
+                status: 'New',
+                dueDate: new Date().toISOString(),
                 createdAt: new Date().toISOString(),  // Set current datetime
+                updatedAt: new Date().toISOString()
             });
             setTasks([...tasks, response.data])
             setNewTask({
                 title: '',
-                summary: '',
-                content: '',
-                createdAt: new Date().toISOString()
+                description: '',
+                status:'New',
+                dueDate:new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
             });
             setSnackbarMessage("Task was added successfully!")
             setSnackbarSeverity("success")
@@ -159,7 +157,7 @@ export default function Tasks() {
 
     const filteredTasks  = tasks.filter( task =>
         (task.title && task.title.toLowerCase().includes(filterText.toLocaleLowerCase())) ||
-        (task.summary && task.summary.toLowerCase().includes(filterText.toLocaleLowerCase()))
+        (task.description && task.description.toLowerCase().includes(filterText.toLocaleLowerCase()))
     );
 
     useEffect(() => {
@@ -167,22 +165,6 @@ export default function Tasks() {
             setTasks(response.data)
         }).catch((error) => {
             console.log("There was an error fetching the tasks", error)
-        })
-    }, []);
-
-    useEffect(() => {
-        axiosInstance.get('http://localhost:8080/categories').then(response => {
-            setCategories(response.data)
-        }).catch((error) => {
-            console.log("There was an error fetching the categories", error)
-        })
-    }, []);
-
-    useEffect(() => {
-        axiosInstance.get('http://localhost:8080/subCategories').then(response => {
-            setAllSubCategories(response.data)
-        }).catch((error) => {
-            console.log("There was an error fetching the suCategories", error)
         })
     }, []);
 
@@ -196,29 +178,6 @@ export default function Tasks() {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);  // Reset the table to the first page whenever rows per page changes
     };
-
-    const handleCategoryChange = (event) => {
-        const selectedCategoryId = event.target.value
-        setNewTask({
-            ...newTask,
-            categoryid: selectedCategoryId,
-            subcategoryid: ''
-        });
-
-        const filteredSubCategories = allSubCategories.filter(
-            (subCategory) => subCategory.categoryid === Number(selectedCategoryId)
-        );
-        setFilteredSubCategories(filteredSubCategories)
-    }
-
-    const handleSubCategoryChange = (event) => {
-        const selectedSubCategoryId = event.target.value
-        setNewTask({
-            ...newTask,
-            subcategoryid: selectedSubCategoryId
-        })
-    }
-
 
     return (
         <Box
@@ -251,10 +210,10 @@ export default function Tasks() {
                         <TableHead>
                             <TableRow>
                                 <TableCell sx={{ fontWeight: 'bold' }} scope="col">#</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }} scope="col">Task Name</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} scope="col">Title</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }} scope="col">Description</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }} scope='col'>Category</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }} scope="col">Date Added</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} scope='col'>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} scope="col">Due Date</TableCell>
                                 <TableCell scope="col"></TableCell>
                             </TableRow>
                         </TableHead>
@@ -268,9 +227,9 @@ export default function Tasks() {
 
                                     <TableCell sx={{ fontSize: '1.1rem' }}><Link to={`/task`} state={{currentTask: task}} >{task.title}</Link></TableCell>
 
-                                    <TableCell sx={{ fontSize: '1.1rem' }}>{task.summary}</TableCell>
-                                    <TableCell sx={{ fontSize: '1.1rem' }}>{task.category? task.category.title:''}</TableCell>
-                                    <TableCell sx={{ fontSize: '1.1rem' }}>{new Date(task.createdAt).toLocaleDateString()}</TableCell>
+                                    <TableCell sx={{ fontSize: '1.1rem' }}>{task.description}</TableCell>
+                                    <TableCell sx={{ fontSize: '1.1rem' }}>{task.status}</TableCell>
+                                    <TableCell sx={{ fontSize: '1.1rem' }}>{task.dueDate}</TableCell>
                                     <TableCell align='center'>
                                         <IconButton color='secondary' onClick={() => handleConfirmOpen(task.id)}>
                                             <DeleteIcon />
@@ -323,49 +282,6 @@ export default function Tasks() {
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>Add New Task</DialogTitle>
                 <DialogContent>
-                    <select
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid #ccc',
-                            marginBottom: '15px',
-                            fontSize: '16px'
-                        }}
-                        id="categoryid"
-                        onChange={handleCategoryChange}
-                        value={newTask.categoryid}
-                    >
-                        <option>Choose...</option>
-                        {categories.filter(c => c.title != null).map(category => (
-                            <option key={category.id} value={category.id} >
-                                {category.title}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        id="subcategoryid"
-                        onChange={handleSubCategoryChange}
-                        value={newTask.subcategoryid}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            borderRadius: '4px',
-                            border: '1px solid #ccc',
-                            marginBottom: '15px',
-                            fontSize: '16px'
-                        }}
-                    >
-                        <option>Choose...</option>
-                        {filteredSubCategories.map(subCategory => (
-                            <option
-                                key={subCategory.id}
-                                value={subCategory.id}
-                            >
-                                {subCategory.description}
-                            </option>
-                        ))}
-                    </select>
                     <TextField
                         margin="dense"
                         name="title"
@@ -377,20 +293,11 @@ export default function Tasks() {
                     />
                     <TextField
                         margin="dense"
-                        name="summary"
-                        label="Summary"
+                        name="description"
+                        label="Description"
                         type="text"
                         fullWidth
-                        value={newTask.sumary}
-                        onChange={handleChange}
-                    />
-                    <TextField
-                        margin="dense"
-                        name="content"
-                        label="Content"
-                        type="text"
-                        fullWidth
-                        value={newTask.content}
+                        value={newTask.description}
                         onChange={handleChange}
                     />
                 </DialogContent>
@@ -423,19 +330,9 @@ export default function Tasks() {
                         label="Summary"
                         type="text"
                         fullWidth
-                        value={editTask.summary}
+                        value={editTask.description}
                         onChange={handleChangeEdit}
                     />
-                    <TextField
-                        margin="dense"
-                        name="content"
-                        label="Content"
-                        type="text"
-                        fullWidth
-                        value={editTask.content}
-                        onChange={handleChangeEdit}
-                    />
-
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseEdit} color="primary">

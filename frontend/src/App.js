@@ -15,7 +15,6 @@ function App() {
             <Route path='' element={<Tasks></Tasks>} />
             <Route path='/tasks' element={<Tasks></Tasks>} />
             <Route path='/task' element={ <Task></Task>} />
-
         </Routes>
             </BrowserRouter>
     </div>

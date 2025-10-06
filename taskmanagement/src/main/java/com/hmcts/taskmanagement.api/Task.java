@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Table(name= "task")
 public class Task{
 
     @Id
@@ -14,6 +15,7 @@ public class Task{
     private Long id;
     private String title;
     private String description;
+    private String status;
     private LocalDateTime dueDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -31,29 +31,29 @@ const TaskCard = ({ task }) => {
         <Card sx={{ maxWidth: 900, margin: '30px auto', border: '3px solid #ccc' }}>
             <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
-                    {task.title} - {task.subCategory.description}
+                    {task.title} - {task.title}
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary">
-                    Category: {task.category.title} ({task.category.metaTitle})
+                    Title: {task.title} ({task.title})
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
 
                 <Typography sx={{fontWeight:'bold'}} variant="subtitle1" gutterBottom>
-                    Summary:
+                    Description:
                 </Typography>
                 <Typography variant="body1">
-                    {task.summary}
+                    {task.description}
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
 
                 <Typography sx={{fontWeight:'bold'}} variant="subtitle1" gutterBottom>
-                    Content:
+                    Status:
                 </Typography>
                 <Typography variant="body1">
-                    {task.content}
+                    {task.status}
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
